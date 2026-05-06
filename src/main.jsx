@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import "./styles.css";
 
+const UBE_LOGO_URL = "https://www.ube.fr/wp-content/themes/ub-theme/static/logo-negatif-ok.svg";
+
 const programmes = [
   { id: "m1-finance-dijon", name: "M1 Finance Dijon", academicYear: "2026-2027" },
   { id: "m2-finance-dijon", name: "M2 Finance Dijon", academicYear: "2026-2027" },
@@ -125,8 +127,13 @@ function EntryScreen({ navigate }) {
     <main className="entry">
       <section className="entryPanel">
         <div className="entryBrand">
-          <CalendarCheck size={30} />
-          <span>CrénoFac</span>
+          <span className="ubeLogoPlate">
+            <img src={UBE_LOGO_URL} alt="Université Bourgogne Europe" />
+          </span>
+          <span className="productMark">
+            <CalendarCheck size={28} />
+            <span>CrénoFac</span>
+          </span>
         </div>
         <h1>CrénoFac</h1>
         <p className="tagline">Planifier les cours sans échanger dix versions d’Excel.</p>
@@ -164,8 +171,11 @@ function AppShell({ children, active = "Tableau de bord", navigate }) {
     <div className="appShell">
       <aside className="sidebar">
         <button className="brandButton" onClick={() => navigate("/")}>
-          <CalendarCheck size={24} />
-          <span>CrénoFac</span>
+          <img className="ubeSidebarLogo" src={UBE_LOGO_URL} alt="Université Bourgogne Europe" />
+          <span className="sidebarProduct">
+            <CalendarCheck size={20} />
+            <span>CrénoFac</span>
+          </span>
         </button>
         <nav>
           {items.map(([label, Icon, href]) => (
@@ -376,7 +386,12 @@ function TeacherView({ notify, navigate }) {
     <main className="teacherPage">
       <header className="teacherHeader">
         <button className="brandButton compactBrand" onClick={() => navigate("/")}>
-          <CalendarCheck size={23} /> CrénoFac
+          <span className="ubeLogoPlate small">
+            <img src={UBE_LOGO_URL} alt="Université Bourgogne Europe" />
+          </span>
+          <span className="productMark">
+            <CalendarCheck size={22} /> CrénoFac
+          </span>
         </button>
         <button className="outlineButton" onClick={() => navigate("/admin")}>Administration</button>
       </header>

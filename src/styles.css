@@ -87,8 +87,44 @@ textarea:focus-visible {
 }
 
 .entryBrand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
   margin-bottom: var(--space-7);
   color: var(--color-primary);
+}
+
+.productMark,
+.sidebarProduct {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ubeLogoPlate {
+  width: 148px;
+  height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 10px 13px;
+  border-radius: 8px;
+  background: var(--color-primary);
+}
+
+.ubeLogoPlate.small {
+  width: 118px;
+  height: 42px;
+  padding: 8px 10px;
+}
+
+.ubeLogoPlate img,
+.ubeSidebarLogo {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .entry h1 {
@@ -198,6 +234,9 @@ textarea:focus-visible {
   width: 100%;
   border: 0;
   background: transparent;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
   padding: var(--space-2) var(--space-2) var(--space-6);
   color: inherit;
   font-size: 20px;
@@ -206,8 +245,20 @@ textarea:focus-visible {
 
 .compactBrand {
   width: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
   padding: 0;
   color: var(--color-primary);
+}
+
+.ubeSidebarLogo {
+  width: 154px;
+}
+
+.sidebarProduct {
+  color: #fff;
+  font-size: 20px;
 }
 
 .navItem {
