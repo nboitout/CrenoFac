@@ -145,6 +145,7 @@ function EntryScreen({ navigate }) {
       <section className="entryPreview" aria-label="Aperçu du planning">
         <PlanningGrid slots={campaigns[1].slots} readonly compact />
       </section>
+      <AppFooter />
     </main>
   );
 }
@@ -190,6 +191,7 @@ function AppShell({ children, active = "Tableau de bord", navigate }) {
           </div>
         </header>
         <main className="content">{children}</main>
+        <AppFooter inset />
       </div>
     </div>
   );
@@ -365,6 +367,7 @@ function TeacherView({ notify, navigate }) {
         <button className="secondaryButton" onClick={() => navigate("/admin/campaigns/m2-janvier")}>
           Retour côté administration
         </button>
+        <AppFooter />
       </main>
     );
   }
@@ -410,6 +413,7 @@ function TeacherView({ notify, navigate }) {
           Valider mes horaires
         </button>
       </section>
+      <AppFooter />
     </main>
   );
 }
@@ -595,6 +599,18 @@ function SuccessPanel({ title, text }) {
 
 function Toast({ message }) {
   return <div className="toast">{message}</div>;
+}
+
+function AppFooter({ inset = false }) {
+  return (
+    <footer className={inset ? "appFooter inset" : "appFooter"}>
+      Développé gracieusement par{" "}
+      <a href="https://www.studentcentral.ai/" target="_blank" rel="noreferrer">
+        StudentCentral.ai
+      </a>{" "}
+      pour les besoins de planification dans l’enseignement supérieur.
+    </footer>
+  );
 }
 
 function enrichCampaign(campaign) {

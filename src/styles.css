@@ -738,6 +738,33 @@ textarea {
   font-weight: 750;
 }
 
+.appFooter {
+  width: min(1180px, calc(100vw - 32px));
+  margin: var(--space-6) auto 0;
+  padding: var(--space-4) 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.appFooter.inset {
+  width: min(1180px, calc(100vw - 292px));
+  margin-top: 0;
+  padding: 0 var(--space-6) var(--space-5);
+}
+
+.appFooter a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.appFooter a:hover {
+  color: var(--color-primary-2);
+  text-decoration: underline;
+}
+
 @media (max-width: 980px) {
   .entry,
   .appShell,
@@ -764,6 +791,11 @@ textarea {
   .content {
     width: 100%;
     padding: var(--space-5);
+  }
+
+  .appFooter.inset {
+    width: 100%;
+    padding: 0 var(--space-5) var(--space-5);
   }
 
   .kpiGrid,
