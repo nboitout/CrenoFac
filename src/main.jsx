@@ -87,16 +87,16 @@ function slot(id, date, label, startTime, endTime, availability, courseId) {
 }
 
 function App() {
-  const [path, setPath] = useState(window.location.pathname);
+  const [path, setPath] = useState(toAppPath(window.location.pathname));
   const [toast, setToast] = useState("");
 
   const navigate = (nextPath) => {
-    window.history.pushState({}, "", nextPath);
+    window.history.pushState({}, "", toBrowserPath(nextPath));
     setPath(nextPath);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  window.onpopstate = () => setPath(window.location.pathname);
+  window.onpopstate = () => setPath(toAppPath(window.location.pathname));
 
   const notify = (message) => {
     setToast(message);
@@ -640,6 +640,21 @@ function formatGridDay(label) {
     .replace("Mercredi", "Mer.")
     .replace("Jeudi", "Jeu.")
     .replace("Vendredi", "Ven.");
+}
+
+function toAppPath(pathname) {
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  if (!basePath || basePath === "") return pathname || "/";
+  if (pathname === basePath) return "/";
+  if (pathname.startsWith(`${basePath}/`)) return pathname.slice(basePath.length) || "/";
+  return pathname || "/";
+}
+
+function toBrowserPath(appPath) {
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  if (!basePath) return appPath;
+  if (appPath === "/") return `${basePath}/`;
+  return `${basePath}${appPath}`;
 }
 
 createRoot(document.getElementById("root")).render(<App />);
