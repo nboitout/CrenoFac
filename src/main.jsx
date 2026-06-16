@@ -70,6 +70,30 @@ const imbsExistingCourses = [
   },
 ];
 
+const imbsBlockedPeriods = [
+  {
+    id: "holiday-all-saints-2026",
+    type: "holiday",
+    label: "All-Saints holiday",
+    startDate: "2026-10-26",
+    endDate: "2026-10-30",
+  },
+  {
+    id: "bank-holiday-armistice-2026",
+    type: "holiday",
+    label: "Armistice bank holiday",
+    startDate: "2026-11-11",
+    endDate: "2026-11-11",
+  },
+  {
+    id: "business-game-2026",
+    type: "occupied",
+    label: "Business Game",
+    startDate: "2026-11-25",
+    endDate: "2026-11-27",
+  },
+];
+
 const imbsProposals = [
   {
     id: "proposal-a-compact-week",
@@ -171,6 +195,9 @@ const campaigns = [
       "L'enseignant doit se déplacer en France. CrénoFac privilégie donc des blocs de cours regroupés plutôt que des séances dispersées.",
     proposals: imbsProposals,
     existingCourses: imbsExistingCourses,
+    blockedPeriods: imbsBlockedPeriods,
+    periodStart: "2026-09-01",
+    periodEnd: "2026-12-20",
     courses: [
       {
         id: "imbs-iis",
@@ -181,7 +208,7 @@ const campaigns = [
         slotDuration: 4,
       },
     ],
-    slots: makeProposalGridSlots(imbsProposals[0], imbsExistingCourses),
+    slots: makeProposalGridSlots(imbsProposals[0], imbsExistingCourses, imbsBlockedPeriods),
   },
 ];
 
@@ -193,25 +220,45 @@ function proposed(id, date, label, startTime, endTime) {
   return { id, date, dayLabel: label, label, startTime, endTime, duration: 4, availability: "proposed" };
 }
 
-function makeProposalGridSlots(proposal, existingCourses = []) {
-  const days = [
-    ["2026-12-14", "Monday 14 December"],
-    ["2026-12-15", "Tuesday 15 December"],
-    ["2026-12-16", "Wednesday 16 December"],
-    ["2026-12-17", "Thursday 17 December"],
-    ["2026-12-18", "Friday 18 December"],
-  ];
+function getWeekdayRange(startDate, endDate) {
+  const days = [];
+  const cursor = parseIsoDate(startDate);
+  const end = parseIsoDate(endDate);
+  while (cursor <= end) {
+    const day = cursor.getDay();
+    if (day >= 1 && day <= 5) {
+      const iso = toIsoDate(cursor);
+      days.push({ date: iso, label: formatFullDate(cursor) });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+function makeProposalGridSlots(proposal, existingCourses = [], blockedPeriods = []) {
+  const days = getWeekdayRange("2026-09-01", "2026-12-20");
   const rows = [
     ["09:00", "13:00"],
     ["13:00", "17:00"],
     ["14:00", "18:00"],
   ];
-  const baseSlots = days.flatMap(([date, label]) =>
+  const baseSlots = days.flatMap(({ date, label }) =>
     rows.map(([startTime, endTime]) =>
       slot(`imbs-${date}-${startTime}`, date, label, startTime, endTime, "available", undefined, 4)
     )
   );
-  const overlay = [...existingCourses, ...proposal.sessions];
+  const blockedSlots = baseSlots.flatMap((baseSlot) => {
+    const period = blockedPeriods.find((item) => isDateWithin(baseSlot.date, item.startDate, item.endDate));
+    return period
+      ? [{
+          ...baseSlot,
+          id: `${period.id}-${baseSlot.id}`,
+          availability: period.type === "holiday" ? "holiday" : "occupied",
+          courseLabel: period.label,
+        }]
+      : [];
+  });
+  const overlay = [...blockedSlots, ...existingCourses, ...proposal.sessions];
   return baseSlots.map((baseSlot) => {
     const match = overlay.find(
       (item) =>
@@ -228,6 +275,61 @@ function makeProposalGridSlots(proposal, existingCourses = []) {
       courseLabel: match.label,
     };
   });
+}
+
+function getSlotWeeks(slots = []) {
+  const weeks = new Map();
+  slots.forEach((slotItem) => {
+    const weekStart = getMondayIso(slotItem.date);
+    if (!weeks.has(weekStart)) {
+      weeks.set(weekStart, {
+        id: weekStart,
+        label: `Semaine du ${formatShortDate(parseIsoDate(weekStart))}`,
+      });
+    }
+  });
+  return [...weeks.values()];
+}
+
+function isSlotInWeek(slotItem, weekStart) {
+  const monday = parseIsoDate(weekStart);
+  const friday = parseIsoDate(weekStart);
+  friday.setDate(friday.getDate() + 4);
+  return isDateWithin(slotItem.date, toIsoDate(monday), toIsoDate(friday));
+}
+
+function getMondayIso(dateString) {
+  const date = parseIsoDate(dateString);
+  const day = date.getDay() || 7;
+  date.setDate(date.getDate() - day + 1);
+  return toIsoDate(date);
+}
+
+function isDateWithin(dateString, startDate, endDate) {
+  return dateString >= startDate && dateString <= endDate;
+}
+
+function parseIsoDate(dateString) {
+  return new Date(`${dateString}T00:00:00`);
+}
+
+function toIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatFullDate(date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(date);
+}
+
+function formatShortDate(date) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
 }
 
 function App() {
@@ -417,9 +519,15 @@ function CampaignDetail({ id, navigate, notify }) {
   const selectedProposal =
     campaign.proposals?.find((proposal) => proposal.id === selectedProposalId) || campaign.proposals?.[0];
   const [proposalSlots, setProposalSlots] = useState(() =>
-    selectedProposal ? makeProposalGridSlots(selectedProposal, campaign.existingCourses) : null
+    selectedProposal ? makeProposalGridSlots(selectedProposal, campaign.existingCourses, campaign.blockedPeriods) : null
   );
-  const planningSlots = selectedProposal ? proposalSlots : campaign.slots;
+  const [selectedWeekId, setSelectedWeekId] = useState(() =>
+    selectedProposal ? getMondayIso(selectedProposal.sessions[0].date) : ""
+  );
+  const proposalWeeks = selectedProposal ? getSlotWeeks(proposalSlots) : [];
+  const planningSlots = selectedProposal
+    ? proposalSlots.filter((slotItem) => isSlotInWeek(slotItem, selectedWeekId))
+    : campaign.slots;
   const placedHours = selectedProposal ? sumProposedSlots(proposalSlots) : campaign.selectedHours;
   const remainingHours = Math.max(campaign.requiredHours - placedHours, 0);
   const canValidate = !selectedProposal || placedHours === campaign.requiredHours;
@@ -428,13 +536,14 @@ function CampaignDetail({ id, navigate, notify }) {
   const handleProposalSelect = (proposalId) => {
     const nextProposal = campaign.proposals.find((proposal) => proposal.id === proposalId);
     setSelectedProposalId(proposalId);
-    setProposalSlots(makeProposalGridSlots(nextProposal, campaign.existingCourses));
+    setProposalSlots(makeProposalGridSlots(nextProposal, campaign.existingCourses, campaign.blockedPeriods));
+    setSelectedWeekId(getMondayIso(nextProposal.sessions[0].date));
   };
 
   const toggleProposalSlot = (slotId) => {
     setProposalSlots((current) =>
       current.map((item) => {
-        if (item.id !== slotId || item.availability === "occupied" || item.availability === "unavailable") return item;
+        if (item.id !== slotId || item.availability === "occupied" || item.availability === "holiday" || item.availability === "unavailable") return item;
         if (item.availability === "proposed") return { ...item, availability: "available", courseLabel: undefined };
         if (item.availability === "available") return { ...item, availability: "proposed", courseLabel: course.title };
         return item;
@@ -503,6 +612,13 @@ function CampaignDetail({ id, navigate, notify }) {
           </div>
           <SlotLegend />
         </div>
+        {selectedProposal ? (
+          <WeekSelector
+            weeks={proposalWeeks}
+            selectedWeekId={selectedWeekId}
+            onSelect={setSelectedWeekId}
+          />
+        ) : null}
         <PlanningGrid slots={planningSlots} readonly={!selectedProposal} onToggle={toggleProposalSlot} />
       </section>
       <section className="actionBar">
@@ -549,6 +665,25 @@ function ProposalComparison({ proposals, selectedProposalId, onSelect }) {
         );
       })}
     </section>
+  );
+}
+
+function WeekSelector({ weeks, selectedWeekId, onSelect }) {
+  return (
+    <div className="weekSelector" aria-label="Choisir une semaine de cours">
+      <span>Période septembre-décembre 2026</span>
+      <div>
+        {weeks.map((week) => (
+          <button
+            key={week.id}
+            className={week.id === selectedWeekId ? "weekButton active" : "weekButton"}
+            onClick={() => onSelect(week.id)}
+          >
+            {week.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -726,7 +861,10 @@ function PlanningGrid({ slots, onToggle, readonly = false, compact = false }) {
   }, [slots]);
 
   return (
-    <div className={compact ? "planningGrid compact" : "planningGrid"}>
+    <div
+      className={compact ? "planningGrid compact" : "planningGrid"}
+      style={{ gridTemplateColumns: `116px repeat(${days.length}, minmax(138px, 1fr))` }}
+    >
       <div className="gridCorner">Horaire</div>
       {days.map((day) => <div className="gridHead" key={day.label}>{formatGridDay(day.label)}</div>)}
       {rows.map((row) => (
@@ -740,13 +878,13 @@ function PlanningGrid({ slots, onToggle, readonly = false, compact = false }) {
                 key={`${day.label}-${row}`}
                 className={`slotCard ${item.availability}`}
                 onClick={() => !readonly && onToggle?.(item.id)}
-                disabled={readonly || item.availability === "unavailable" || item.availability === "occupied"}
+                disabled={readonly || item.availability === "unavailable" || item.availability === "occupied" || item.availability === "holiday"}
               >
                 <span>{item.startTime} - {item.endTime}</span>
                 <strong>{slotLabel(item.availability)}</strong>
                 {item.courseLabel ? <small>{item.courseLabel}</small> : null}
                 {item.availability === "validated" ? <Check size={15} /> : null}
-                {item.availability === "conflict" || item.availability === "occupied" ? <AlertTriangle size={15} /> : null}
+                {item.availability === "conflict" || item.availability === "occupied" || item.availability === "holiday" ? <AlertTriangle size={15} /> : null}
               </button>
             ) : (
               <div className="slotCard unavailable" key={`${day.label}-${row}`}>Indisponible</div>
@@ -804,7 +942,7 @@ function StatusBadge({ status }) {
 function SlotLegend() {
   return (
     <div className="legend">
-      {["available", "proposed", "selected", "validated", "occupied", "unavailable", "conflict"].map((state) => (
+      {["available", "proposed", "selected", "validated", "occupied", "holiday", "unavailable", "conflict"].map((state) => (
         <span key={state}><i className={state} />{slotLabel(state)}</span>
       ))}
     </div>

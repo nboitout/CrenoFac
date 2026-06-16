@@ -649,6 +649,13 @@ tr:last-child td {
     repeating-linear-gradient(-45deg, #eef3f6, #eef3f6 8px, #dde8ee 8px, #dde8ee 16px);
 }
 
+.slotCard.holiday {
+  color: #7b5208;
+  border-color: #f6d48b;
+  background:
+    repeating-linear-gradient(-45deg, #fff7e8, #fff7e8 8px, #f5dfad 8px, #f5dfad 16px);
+}
+
 .slotCard.conflict {
   border-color: var(--color-error);
   background: #fff0ee;
@@ -694,6 +701,10 @@ tr:last-child td {
 .legend .unavailable,
 .legend .occupied {
   background: #dde8ee;
+}
+
+.legend .holiday {
+  background: var(--color-warning);
 }
 
 .legend .conflict {
@@ -794,6 +805,46 @@ tr:last-child td {
 .proposalMetrics .summaryItem strong {
   font-size: 18px;
   line-height: 1.15;
+}
+
+.weekSelector {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #f7fafc;
+}
+
+.weekSelector > span {
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.weekSelector > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.weekButton {
+  min-height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-primary);
+  padding: 0 var(--space-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.weekButton.active,
+.weekButton:hover {
+  border-color: var(--color-primary-2);
+  background: var(--color-primary-2);
+  color: #fff;
 }
 
 .teacherPage {
