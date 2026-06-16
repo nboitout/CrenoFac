@@ -21,11 +21,88 @@ const UBE_LOGO_URL = "https://www.ube.fr/wp-content/themes/ub-theme/static/logo-
 const programmes = [
   { id: "m1-finance-dijon", name: "M1 Finance Dijon", academicYear: "2026-2027" },
   { id: "m2-finance-dijon", name: "M2 Finance Dijon", academicYear: "2026-2027" },
+  {
+    id: "imbs-m1-2026",
+    name: "International Master in Business Studies",
+    shortName: "M1 IMBS / IMS",
+    campus: "Dijon",
+    academicYear: "2026-2027",
+    semester: "S1",
+  },
 ];
 
 const teachers = [
   { id: "nicolas", name: "Nicolas Boitout", email: "nicolas.boitout@ube.fr" },
   { id: "claire", name: "Claire Martin", email: "claire.martin@ube.fr" },
+  { id: "imbs-visiting", name: "Enseignant invité", email: "visiting.teacher@university.example" },
+];
+
+const imbsExistingCourses = [
+  {
+    id: "existing-intro-economics-2026-12-14-pm",
+    label: "Introduction to Economics",
+    date: "2026-12-14",
+    dayLabel: "Monday 14 December",
+    startTime: "13:00",
+    endTime: "17:00",
+    duration: 4,
+    availability: "occupied",
+  },
+  {
+    id: "existing-management-accounting-2026-12-16-am",
+    label: "Management Accounting",
+    date: "2026-12-16",
+    dayLabel: "Wednesday 16 December",
+    startTime: "09:00",
+    endTime: "13:00",
+    duration: 4,
+    availability: "occupied",
+  },
+  {
+    id: "existing-international-marketing-2026-12-18-am",
+    label: "International Marketing",
+    date: "2026-12-18",
+    dayLabel: "Friday 18 December",
+    startTime: "09:00",
+    endTime: "13:00",
+    duration: 4,
+    availability: "occupied",
+  },
+];
+
+const imbsProposals = [
+  {
+    id: "proposal-a-compact-week",
+    name: "Proposition A - Semaine de cours regroupée",
+    recommendationLevel: "recommended",
+    travelEfficiency: "high",
+    studentLoad: "balanced",
+    totalHours: 20,
+    reasoning: "Recommandée : les 20 h sont placées sur une seule semaine, avec une charge quotidienne équilibrée.",
+    sessions: [
+      proposed("iis-a-2026-12-14-am", "2026-12-14", "Monday 14 December", "09:00", "13:00"),
+      proposed("iis-a-2026-12-15-am", "2026-12-15", "Tuesday 15 December", "09:00", "13:00"),
+      proposed("iis-a-2026-12-16-pm", "2026-12-16", "Wednesday 16 December", "13:00", "17:00"),
+      proposed("iis-a-2026-12-17-am", "2026-12-17", "Thursday 17 December", "09:00", "13:00"),
+      proposed("iis-a-2026-12-18-pm", "2026-12-18", "Friday 18 December", "13:00", "17:00"),
+    ],
+  },
+  {
+    id: "proposal-b-intensive-block",
+    name: "Proposition B - Bloc intensif sur trois jours",
+    recommendationLevel: "alternative",
+    travelEfficiency: "very_high",
+    studentLoad: "heavy",
+    totalHours: 20,
+    reasoning: "Alternative : déplacement plus court, mais journées d'enseignement plus lourdes.",
+    sessions: [
+      proposed("iis-b-2026-12-15-am", "2026-12-15", "Tuesday 15 December", "09:00", "13:00"),
+      proposed("iis-b-2026-12-15-pm", "2026-12-15", "Tuesday 15 December", "14:00", "18:00"),
+      proposed("iis-b-2026-12-16-pm", "2026-12-16", "Wednesday 16 December", "13:00", "17:00"),
+      proposed("iis-b-2026-12-17-am", "2026-12-17", "Thursday 17 December", "09:00", "13:00"),
+      proposed("iis-b-2026-12-17-pm", "2026-12-17", "Thursday 17 December", "14:00", "18:00"),
+    ],
+  },
 ];
 
 const campaigns = [
@@ -82,10 +159,75 @@ const campaigns = [
       slot("m2-10", "2027-01-08", "Vendredi 8 janvier", "13:30", "17:00", "available"),
     ],
   },
+  {
+    id: "campaign-imbs-iis-s1-2026",
+    programmeId: "imbs-m1-2026",
+    name: "International Information System - S1 2026",
+    month: "Sept.-déc. 2026",
+    status: "proposal_ready",
+    period: "Septembre-décembre 2026",
+    teacherConstraint: "Contrainte enseignant : privilégier des blocs de cours regroupés",
+    constraintDescription:
+      "L'enseignant doit se déplacer en France. CrénoFac privilégie donc des blocs de cours regroupés plutôt que des séances dispersées.",
+    proposals: imbsProposals,
+    existingCourses: imbsExistingCourses,
+    courses: [
+      {
+        id: "imbs-iis",
+        programmeId: "imbs-m1-2026",
+        title: "International Information System",
+        teacherId: "imbs-visiting",
+        requiredHours: 20,
+        slotDuration: 4,
+      },
+    ],
+    slots: makeProposalGridSlots(imbsProposals[0], imbsExistingCourses),
+  },
 ];
 
-function slot(id, date, label, startTime, endTime, availability, courseId) {
-  return { id, date, label, startTime, endTime, duration: 3.5, availability, courseId };
+function slot(id, date, label, startTime, endTime, availability, courseId, duration = 3.5) {
+  return { id, date, label, startTime, endTime, duration, availability, courseId };
+}
+
+function proposed(id, date, label, startTime, endTime) {
+  return { id, date, dayLabel: label, label, startTime, endTime, duration: 4, availability: "proposed" };
+}
+
+function makeProposalGridSlots(proposal, existingCourses = []) {
+  const days = [
+    ["2026-12-14", "Monday 14 December"],
+    ["2026-12-15", "Tuesday 15 December"],
+    ["2026-12-16", "Wednesday 16 December"],
+    ["2026-12-17", "Thursday 17 December"],
+    ["2026-12-18", "Friday 18 December"],
+  ];
+  const rows = [
+    ["09:00", "13:00"],
+    ["13:00", "17:00"],
+    ["14:00", "18:00"],
+  ];
+  const baseSlots = days.flatMap(([date, label]) =>
+    rows.map(([startTime, endTime]) =>
+      slot(`imbs-${date}-${startTime}`, date, label, startTime, endTime, "available", undefined, 4)
+    )
+  );
+  const overlay = [...existingCourses, ...proposal.sessions];
+  return baseSlots.map((baseSlot) => {
+    const match = overlay.find(
+      (item) =>
+        item.date === baseSlot.date &&
+        item.startTime === baseSlot.startTime &&
+        item.endTime === baseSlot.endTime
+    );
+    if (!match) return baseSlot;
+    return {
+      ...baseSlot,
+      id: match.id,
+      availability: match.availability,
+      label: match.dayLabel || baseSlot.label,
+      courseLabel: match.label,
+    };
+  });
 }
 
 function App() {
@@ -112,7 +254,10 @@ function App() {
     screen = <CampaignDetail id={id} navigate={navigate} notify={notify} />;
   }
   if (path.startsWith("/teacher/")) screen = <TeacherView notify={notify} navigate={navigate} />;
-  if (path.startsWith("/export/")) screen = <ExportPreview notify={notify} navigate={navigate} />;
+  if (path.startsWith("/export/")) {
+    const campaignId = path.split("/").at(-1);
+    screen = <ExportPreview campaignId={campaignId} notify={notify} navigate={navigate} />;
+  }
 
   return (
     <>
@@ -213,7 +358,7 @@ function AdminDashboard({ navigate }) {
     <AppShell navigate={navigate}>
       <PageHeader title="Tableau de bord" subtitle="Suivi des campagnes de planification en cours." />
       <section className="kpiGrid">
-        <KpiCard label="Programmes actifs" value="2" />
+        <KpiCard label="Programmes actifs" value="3" />
         <KpiCard label="Enseignants sollicités" value="12" />
         <KpiCard label="Réponses reçues" value="8" />
         <KpiCard label="Créneaux validés" value="14" />
@@ -266,8 +411,16 @@ function AdminDashboard({ navigate }) {
 
 function CampaignDetail({ id, navigate, notify }) {
   const campaign = enrichCampaign(campaigns.find((item) => item.id === id) || campaigns[1]);
+  const [selectedProposalId, setSelectedProposalId] = useState(campaign.proposals?.[0]?.id || "");
   const course = campaign.courses[0];
   const teacher = teachers.find((item) => item.id === course.teacherId);
+  const selectedProposal =
+    campaign.proposals?.find((proposal) => proposal.id === selectedProposalId) || campaign.proposals?.[0];
+  const planningSlots = selectedProposal
+    ? makeProposalGridSlots(selectedProposal, campaign.existingCourses)
+    : campaign.slots;
+  const placedHours = selectedProposal ? proposalHours(selectedProposal) : campaign.selectedHours;
+  const remainingHours = Math.max(campaign.requiredHours - placedHours, 0);
   const status = deriveStatus(campaign.selectedHours, campaign.requiredHours, campaign.status);
 
   return (
@@ -280,6 +433,15 @@ function CampaignDetail({ id, navigate, notify }) {
         <SummaryItem label="Créneau standard" value="3h30" />
         <SummaryItem label="Statut" value={<StatusBadge status={status} />} />
       </section>
+      {campaign.teacherConstraint ? <WarningBanner text={campaign.teacherConstraint} /> : null}
+      {campaign.constraintDescription ? <section className="constraintPanel">{campaign.constraintDescription}</section> : null}
+      {selectedProposal ? (
+        <ProposalComparison
+          proposals={campaign.proposals}
+          selectedProposalId={selectedProposal.id}
+          onSelect={setSelectedProposalId}
+        />
+      ) : null}
       {campaign.selectedHours > campaign.requiredHours ? <WarningBanner tone="error" text="Le volume placé dépasse le volume demandé." /> : null}
       <section className="sectionCard">
         <div className="sectionHeader">
@@ -317,18 +479,18 @@ function CampaignDetail({ id, navigate, notify }) {
         <div className="sectionHeader">
           <div>
             <h2>Grille de planning</h2>
-            <p>Semaine du 4 janvier.</p>
+            <p>{selectedProposal ? "Semaine proposée du 14 décembre." : "Semaine du 4 janvier."}</p>
           </div>
           <SlotLegend />
         </div>
-        <PlanningGrid slots={campaign.slots} readonly />
+        <PlanningGrid slots={planningSlots} readonly />
       </section>
       <section className="actionBar">
         <button className="secondaryButton" onClick={() => notify("Invitation simulée pour la démo.")}>
           <Mail size={18} /> Inviter les enseignants
         </button>
         <button className="primaryButton" onClick={() => notify("Planning marqué comme validé pour la démo.")}>
-          <Check size={18} /> Valider le planning
+          <Check size={18} /> {selectedProposal ? "Valider la proposition" : "Valider le planning"}
         </button>
         <button className="secondaryButton" onClick={() => navigate(`/export/${campaign.id}`)}>
           <FileSpreadsheet size={18} /> Exporter en Excel
@@ -338,6 +500,35 @@ function CampaignDetail({ id, navigate, notify }) {
         </button>
       </section>
     </AppShell>
+  );
+}
+
+function ProposalComparison({ proposals, selectedProposalId, onSelect }) {
+  return (
+    <section className="proposalGrid">
+      {proposals.map((proposal) => {
+        const isSelected = proposal.id === selectedProposalId;
+        return (
+          <article className={isSelected ? "proposalCard selected" : "proposalCard"} key={proposal.id}>
+            <div className="proposalHeader">
+              <div>
+                <h2>{proposal.name}</h2>
+                <p>{proposal.reasoning}</p>
+              </div>
+              <StatusBadge status={proposal.recommendationLevel} />
+            </div>
+            <div className="proposalMetrics">
+              <SummaryItem label="Efficacité déplacement" value={proposalMetricLabel(proposal.travelEfficiency)} />
+              <SummaryItem label="Charge étudiants" value={proposalMetricLabel(proposal.studentLoad)} />
+              <SummaryItem label="Total" value={formatHours(proposalHours(proposal))} />
+            </div>
+            <button className={isSelected ? "primaryButton" : "secondaryButton"} onClick={() => onSelect(proposal.id)}>
+              {isSelected ? "Proposition sélectionnée" : "Sélectionner la proposition"}
+            </button>
+          </article>
+        );
+      })}
+    </section>
   );
 }
 
@@ -433,14 +624,27 @@ function TeacherView({ notify, navigate }) {
   );
 }
 
-function ExportPreview({ notify, navigate }) {
-  const rows = [
+function ExportPreview({ campaignId, notify, navigate }) {
+  const campaign = enrichCampaign(campaigns.find((item) => item.id === campaignId) || campaigns[1]);
+  let rows = [
     ["Lundi 4 janvier", "13h30-17h", "M2 Finance Dijon", "Nicolas Boitout", "Finance", "Validé"],
     ["Mardi 5 janvier", "9h-12h30", "M2 Finance Dijon", "Nicolas Boitout", "Finance", "Validé"],
     ["Mardi 5 janvier", "13h30-17h", "M2 Finance Dijon", "Nicolas Boitout", "Finance", "Validé"],
     ["Mercredi 6 janvier", "9h-12h30", "M2 Finance Dijon", "Nicolas Boitout", "Finance", "Validé"],
     ["Mercredi 6 janvier", "13h30-17h", "M2 Finance Dijon", "Nicolas Boitout", "Finance", "Validé"],
   ];
+
+  if (campaign.proposals?.[0]) {
+    const teacher = teachers.find((item) => item.id === campaign.courses[0].teacherId);
+    rows = campaign.proposals[0].sessions.map((session) => [
+      session.dayLabel,
+      `${session.startTime}-${session.endTime}`,
+      campaign.programme.name,
+      teacher.name,
+      campaign.courses[0].title,
+      "Proposition",
+    ]);
+  }
 
   return (
     <AppShell active="Exports" navigate={navigate}>
@@ -468,7 +672,7 @@ function ExportPreview({ notify, navigate }) {
               {rows.map((row) => (
                 <tr key={row.join("-")}>
                   {row.slice(0, 5).map((cell) => <td key={cell}>{cell}</td>)}
-                  <td><StatusBadge status="validated" /></td>
+                  <td><StatusBadge status={campaign.proposals?.[0] ? "proposal_ready" : "validated"} /></td>
                 </tr>
               ))}
             </tbody>
@@ -492,7 +696,9 @@ function ExportPreview({ notify, navigate }) {
 
 function PlanningGrid({ slots, onToggle, readonly = false, compact = false }) {
   const days = [...new Map(slots.map((item) => [item.label, item])).values()];
-  const rows = ["09:00-12:30", "13:30-17:00"];
+  const rows = [...new Set(slots.map((item) => `${item.startTime}-${item.endTime}`))].sort((a, b) =>
+    a.localeCompare(b)
+  );
   const byKey = useMemo(() => {
     const map = new Map();
     slots.forEach((item) => map.set(`${item.label}-${item.startTime}-${item.endTime}`, item));
@@ -514,12 +720,12 @@ function PlanningGrid({ slots, onToggle, readonly = false, compact = false }) {
                 key={`${day.label}-${row}`}
                 className={`slotCard ${item.availability}`}
                 onClick={() => !readonly && onToggle?.(item.id)}
-                disabled={readonly || item.availability === "unavailable"}
+                disabled={readonly || item.availability === "unavailable" || item.availability === "occupied"}
               >
                 <span>{item.startTime} - {item.endTime}</span>
                 <strong>{slotLabel(item.availability)}</strong>
                 {item.availability === "validated" ? <Check size={15} /> : null}
-                {item.availability === "conflict" ? <AlertTriangle size={15} /> : null}
+                {item.availability === "conflict" || item.availability === "occupied" ? <AlertTriangle size={15} /> : null}
               </button>
             ) : (
               <div className="slotCard unavailable" key={`${day.label}-${row}`}>Indisponible</div>
@@ -563,6 +769,9 @@ function StatusBadge({ status }) {
     pending: "En attente",
     partial: "À compléter",
     complete: "Complet",
+    proposal_ready: "Proposition prête",
+    recommended: "Recommandée",
+    alternative: "Alternative",
     ready_to_validate: "À valider",
     validated: "Validé",
     exported: "Exporté",
@@ -574,7 +783,7 @@ function StatusBadge({ status }) {
 function SlotLegend() {
   return (
     <div className="legend">
-      {["available", "selected", "validated", "unavailable", "conflict"].map((state) => (
+      {["available", "proposed", "selected", "validated", "occupied", "unavailable", "conflict"].map((state) => (
         <span key={state}><i className={state} />{slotLabel(state)}</span>
       ))}
     </div>
@@ -631,7 +840,7 @@ function AppFooter({ inset = false }) {
 function enrichCampaign(campaign) {
   const programme = programmes.find((item) => item.id === campaign.programmeId);
   const requiredHours = campaign.courses.reduce((sum, course) => sum + course.requiredHours, 0);
-  const selectedHours = sumSelected(campaign.slots);
+  const selectedHours = campaign.proposals?.[0] ? proposalHours(campaign.proposals[0]) : sumSelected(campaign.slots);
   const displayStatus = deriveStatus(selectedHours, requiredHours, campaign.status);
   return { ...campaign, programme, requiredHours, selectedHours, displayStatus };
 }
@@ -642,8 +851,22 @@ function sumSelected(slots) {
     .reduce((sum, item) => sum + item.duration, 0);
 }
 
+function proposalHours(proposal) {
+  return proposal.sessions.reduce((sum, session) => sum + session.duration, 0);
+}
+
+function proposalMetricLabel(value) {
+  return {
+    high: "Élevée",
+    very_high: "Très élevée",
+    balanced: "Équilibrée",
+    heavy: "Forte",
+  }[value] || value;
+}
+
 function deriveStatus(selectedHours, requiredHours, persistedStatus) {
   if (persistedStatus === "validated" || persistedStatus === "exported") return persistedStatus;
+  if (persistedStatus === "proposal_ready") return "proposal_ready";
   if (selectedHours === 0) return "pending";
   if (selectedHours < requiredHours) return "partial";
   if (selectedHours === requiredHours) return persistedStatus === "ready_to_validate" ? "ready_to_validate" : "complete";
@@ -657,6 +880,10 @@ function formatHours(value) {
 function slotLabel(status) {
   return {
     available: "Disponible",
+    proposed: "Proposé",
+    occupied: "Occupé",
+    holiday: "Vacances",
+    special_week: "Semaine spéciale",
     unavailable: "Indisponible",
     selected: "Sélectionné",
     conflict: "Conflit",
@@ -670,7 +897,12 @@ function formatGridDay(label) {
     .replace("Mardi", "Mar.")
     .replace("Mercredi", "Mer.")
     .replace("Jeudi", "Jeu.")
-    .replace("Vendredi", "Ven.");
+    .replace("Vendredi", "Ven.")
+    .replace("Monday", "Mon.")
+    .replace("Tuesday", "Tue.")
+    .replace("Wednesday", "Wed.")
+    .replace("Thursday", "Thu.")
+    .replace("Friday", "Fri.");
 }
 
 function toAppPath(pathname) {

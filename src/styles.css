@@ -511,6 +511,17 @@ tr:last-child td {
   color: var(--color-primary-2);
 }
 
+.statusBadge.proposal_ready,
+.statusBadge.recommended {
+  background: #e4f8fc;
+  color: var(--color-primary-2);
+}
+
+.statusBadge.alternative {
+  background: #fff5df;
+  color: #8a5a00;
+}
+
 .statusBadge.validated {
   background: #e6f6f0;
   color: var(--color-success);
@@ -602,6 +613,12 @@ tr:last-child td {
   color: #fff;
 }
 
+.slotCard.proposed {
+  border-color: var(--color-accent);
+  background: #dff7fc;
+  color: var(--color-primary);
+}
+
 .slotCard.validated {
   border-color: var(--color-success);
   background: var(--color-primary-2);
@@ -614,6 +631,13 @@ tr:last-child td {
 
 .slotCard.unavailable {
   color: var(--color-muted);
+  background:
+    repeating-linear-gradient(-45deg, #eef3f6, #eef3f6 8px, #dde8ee 8px, #dde8ee 16px);
+}
+
+.slotCard.occupied {
+  color: var(--color-muted);
+  border-color: #c9d4da;
   background:
     repeating-linear-gradient(-45deg, #eef3f6, #eef3f6 8px, #dde8ee 8px, #dde8ee 16px);
 }
@@ -652,11 +676,16 @@ tr:last-child td {
   background: var(--color-primary-2);
 }
 
+.legend .proposed {
+  background: var(--color-accent);
+}
+
 .legend .validated {
   border-color: var(--color-success);
 }
 
-.legend .unavailable {
+.legend .unavailable,
+.legend .occupied {
   background: #dde8ee;
 }
 
@@ -688,6 +717,76 @@ tr:last-child td {
   border-color: #efb9b3;
   background: #fff0ee;
   color: var(--color-error);
+}
+
+.constraintPanel {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid #bce8f1;
+  border-radius: 8px;
+  background: #f0fbfe;
+  color: var(--color-primary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.proposalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.proposalCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0, 59, 92, 0.06);
+}
+
+.proposalCard.selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(0, 166, 200, 0.12), 0 12px 28px rgba(0, 59, 92, 0.08);
+}
+
+.proposalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.proposalHeader h2 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 19px;
+}
+
+.proposalHeader p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.proposalMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.proposalMetrics .summaryItem {
+  min-height: 76px;
+  padding: var(--space-3);
+}
+
+.proposalMetrics .summaryItem strong {
+  font-size: 18px;
+  line-height: 1.15;
 }
 
 .teacherPage {
@@ -852,6 +951,11 @@ textarea {
   .kpiGrid,
   .summaryGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .proposalGrid,
+  .proposalMetrics {
+    grid-template-columns: 1fr;
   }
 }
 
