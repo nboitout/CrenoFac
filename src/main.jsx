@@ -416,21 +416,40 @@ function CampaignDetail({ id, navigate, notify }) {
   const teacher = teachers.find((item) => item.id === course.teacherId);
   const selectedProposal =
     campaign.proposals?.find((proposal) => proposal.id === selectedProposalId) || campaign.proposals?.[0];
-  const planningSlots = selectedProposal
-    ? makeProposalGridSlots(selectedProposal, campaign.existingCourses)
-    : campaign.slots;
-  const placedHours = selectedProposal ? proposalHours(selectedProposal) : campaign.selectedHours;
+  const [proposalSlots, setProposalSlots] = useState(() =>
+    selectedProposal ? makeProposalGridSlots(selectedProposal, campaign.existingCourses) : null
+  );
+  const planningSlots = selectedProposal ? proposalSlots : campaign.slots;
+  const placedHours = selectedProposal ? sumProposedSlots(proposalSlots) : campaign.selectedHours;
   const remainingHours = Math.max(campaign.requiredHours - placedHours, 0);
+  const canValidate = !selectedProposal || placedHours === campaign.requiredHours;
   const status = deriveStatus(campaign.selectedHours, campaign.requiredHours, campaign.status);
+
+  const handleProposalSelect = (proposalId) => {
+    const nextProposal = campaign.proposals.find((proposal) => proposal.id === proposalId);
+    setSelectedProposalId(proposalId);
+    setProposalSlots(makeProposalGridSlots(nextProposal, campaign.existingCourses));
+  };
+
+  const toggleProposalSlot = (slotId) => {
+    setProposalSlots((current) =>
+      current.map((item) => {
+        if (item.id !== slotId || item.availability === "occupied" || item.availability === "unavailable") return item;
+        if (item.availability === "proposed") return { ...item, availability: "available", courseLabel: undefined };
+        if (item.availability === "available") return { ...item, availability: "proposed", courseLabel: course.title };
+        return item;
+      })
+    );
+  };
 
   return (
     <AppShell active="Campagnes" navigate={navigate}>
       <PageHeader title={`${campaign.programme.name} — ${campaign.name}`} subtitle="Volume, créneaux et validation." />
       <section className="summaryGrid">
         <SummaryItem label="Volume demandé" value={formatHours(campaign.requiredHours)} />
-        <SummaryItem label="Volume placé" value={formatHours(campaign.selectedHours)} />
-        <SummaryItem label="Reste à placer" value={formatHours(Math.max(campaign.requiredHours - campaign.selectedHours, 0))} />
-        <SummaryItem label="Créneau standard" value="3h30" />
+        <SummaryItem label={selectedProposal ? "Volume proposé" : "Volume placé"} value={formatHours(placedHours)} />
+        <SummaryItem label="Reste à placer" value={formatHours(remainingHours)} />
+        <SummaryItem label={selectedProposal ? "Durée préférée" : "Créneau standard"} value={selectedProposal ? "4h" : "3h30"} />
         <SummaryItem label="Statut" value={<StatusBadge status={status} />} />
       </section>
       {campaign.teacherConstraint ? <WarningBanner text={campaign.teacherConstraint} /> : null}
@@ -439,10 +458,11 @@ function CampaignDetail({ id, navigate, notify }) {
         <ProposalComparison
           proposals={campaign.proposals}
           selectedProposalId={selectedProposal.id}
-          onSelect={setSelectedProposalId}
+          onSelect={handleProposalSelect}
         />
       ) : null}
-      {campaign.selectedHours > campaign.requiredHours ? <WarningBanner tone="error" text="Le volume placé dépasse le volume demandé." /> : null}
+      {selectedProposal && remainingHours > 0 ? <WarningBanner text={`Il reste ${formatHours(remainingHours)} à placer dans la proposition.`} /> : null}
+      {placedHours > campaign.requiredHours ? <WarningBanner tone="error" text="La proposition dépasse le volume demandé." /> : null}
       <section className="sectionCard">
         <div className="sectionHeader">
           <div>
@@ -467,8 +487,8 @@ function CampaignDetail({ id, navigate, notify }) {
                 <td>{teacher.name}</td>
                 <td>{course.title}</td>
                 <td>{formatHours(course.requiredHours)}</td>
-                <td>{formatHours(campaign.selectedHours)}</td>
-                <td>{formatHours(Math.max(course.requiredHours - campaign.selectedHours, 0))}</td>
+                <td>{formatHours(placedHours)}</td>
+                <td>{formatHours(Math.max(course.requiredHours - placedHours, 0))}</td>
                 <td><StatusBadge status={status === "ready_to_validate" ? "complete" : status} /></td>
               </tr>
             </tbody>
@@ -479,17 +499,17 @@ function CampaignDetail({ id, navigate, notify }) {
         <div className="sectionHeader">
           <div>
             <h2>Grille de planning</h2>
-            <p>{selectedProposal ? "Semaine proposée du 14 décembre." : "Semaine du 4 janvier."}</p>
+            <p>{selectedProposal ? "Cliquez sur les créneaux disponibles pour ajuster la proposition." : "Semaine du 4 janvier."}</p>
           </div>
           <SlotLegend />
         </div>
-        <PlanningGrid slots={planningSlots} readonly />
+        <PlanningGrid slots={planningSlots} readonly={!selectedProposal} onToggle={toggleProposalSlot} />
       </section>
       <section className="actionBar">
         <button className="secondaryButton" onClick={() => notify("Invitation simulée pour la démo.")}>
           <Mail size={18} /> Inviter les enseignants
         </button>
-        <button className="primaryButton" onClick={() => notify("Planning marqué comme validé pour la démo.")}>
+        <button className="primaryButton" disabled={!canValidate} onClick={() => notify(selectedProposal ? "Proposition validée pour la démo." : "Planning marqué comme validé pour la démo.")}>
           <Check size={18} /> {selectedProposal ? "Valider la proposition" : "Valider le planning"}
         </button>
         <button className="secondaryButton" onClick={() => navigate(`/export/${campaign.id}`)}>
@@ -724,6 +744,7 @@ function PlanningGrid({ slots, onToggle, readonly = false, compact = false }) {
               >
                 <span>{item.startTime} - {item.endTime}</span>
                 <strong>{slotLabel(item.availability)}</strong>
+                {item.courseLabel ? <small>{item.courseLabel}</small> : null}
                 {item.availability === "validated" ? <Check size={15} /> : null}
                 {item.availability === "conflict" || item.availability === "occupied" ? <AlertTriangle size={15} /> : null}
               </button>
@@ -853,6 +874,12 @@ function sumSelected(slots) {
 
 function proposalHours(proposal) {
   return proposal.sessions.reduce((sum, session) => sum + session.duration, 0);
+}
+
+function sumProposedSlots(slots = []) {
+  return slots
+    .filter((item) => item.availability === "proposed" || item.availability === "selected" || item.availability === "validated")
+    .reduce((sum, item) => sum + item.duration, 0);
 }
 
 function proposalMetricLabel(value) {

@@ -602,6 +602,13 @@ tr:last-child td {
   font-size: 13px;
 }
 
+.slotCard small {
+  max-width: calc(100% - 22px);
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
 .slotCard.available:hover {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(0, 166, 200, 0.12);
